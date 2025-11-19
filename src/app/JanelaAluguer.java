@@ -30,7 +30,7 @@ import javax.swing.SpringLayout;
 import javax.swing.table.DefaultTableModel;
 
 import aluguer.BESTAuto;
-import aluguer.Categoria;
+import aluguer.viatura.Categoria;
 import pds.tempo.HorarioDiario;
 import pds.tempo.HorarioSemanal;
 import pds.tempo.IntervaloTempo;

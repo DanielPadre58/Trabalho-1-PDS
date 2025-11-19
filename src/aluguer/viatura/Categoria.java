@@ -1,4 +1,4 @@
-package aluguer;
+package aluguer.viatura;
 
 /** enumeração com as categorias de viaturas */
 public enum Categoria {

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
 import aluguer.BESTAuto;
-import aluguer.Categoria;
+import aluguer.viatura.Categoria;
 import app.LeitorFicheiros.Bloco;
 import pds.tempo.HorarioDiario;
 import pds.tempo.HorarioSemanal;

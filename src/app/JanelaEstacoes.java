@@ -24,7 +24,7 @@ import javax.swing.table.TableColumnModel;
 import static javax.swing.SpringLayout.*;
 
 import aluguer.BESTAuto;
-import aluguer.Categoria;
+import aluguer.viatura.Categoria;
 
 @SuppressWarnings("serial")
 /**
