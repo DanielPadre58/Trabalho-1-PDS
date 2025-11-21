@@ -1,8 +1,6 @@
-﻿package aluguer.estacao.extensao;
+package aluguer.estacao.extensao;
 
-import pds.tempo.HorarioDiario;
 import pds.tempo.HorarioSemanal;
-import pds.tempo.IntervaloTempo;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;

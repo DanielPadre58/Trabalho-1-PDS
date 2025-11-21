@@ -1,10 +1,11 @@
-﻿package aluguer.estacao;
+package aluguer.estacao;
 
 import aluguer.Aluguer;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,10 +18,9 @@ public class EstacaoGrande implements Estacao {
     private final List<Viatura> viaturas;
     private final List<ViaturaIndisponivel> viaturasIndisponiveis;
 
-    protected EstacaoGrande(String id, String nome) {
+    public EstacaoGrande(String id, String nome) {
         this.id = Objects.requireNonNull(id);
-        this.nome = Objects.requireNonNull(nome);
-        this.central = null;
+        this.nome = nome;
         this.viaturas = new ArrayList<>();
         this.viaturasIndisponiveis = new ArrayList<>();
     }
@@ -38,6 +38,16 @@ public class EstacaoGrande implements Estacao {
     @Override
     public HorarioSemanal getHorario() {
         return HorarioSemanal.sempreAberto();
+    }
+
+    @Override
+    public boolean estaAberta(LocalDateTime hora) {
+        return true;
+    }
+    
+    @Override
+    public boolean estaAbertaEmExtensao(LocalDateTime hora) {
+        return false;
     }
 
     @Override

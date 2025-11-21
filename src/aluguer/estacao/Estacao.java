@@ -1,9 +1,10 @@
-﻿package aluguer.estacao;
+package aluguer.estacao;
 
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface Estacao {
@@ -12,6 +13,10 @@ public interface Estacao {
     String getNome();
     
     public HorarioSemanal getHorario();
+    
+    public boolean estaAberta(LocalDateTime hora);
+    
+    public boolean estaAbertaEmExtensao(LocalDateTime hora);
 
     Estacao getCentral();
 

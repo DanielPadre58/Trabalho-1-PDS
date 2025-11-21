@@ -1,6 +1,6 @@
-﻿package aluguer.viatura;
+package aluguer.viatura;
 
-import aluguer.estacao.EstacaoGrande;
+import aluguer.estacao.Estacao;
 import pds.util.Validator;
 
 import java.util.Objects;
@@ -8,13 +8,13 @@ import java.util.Objects;
 public class Viatura {
     private final String matricula;
     private final ModeloViatura modelo;
-    private final EstacaoGrande estacao;
+    private final Estacao estacao;
     
-    
-    public Viatura(String matricula, ModeloViatura modelo, EstacaoGrande estacao, String marca, int lote) {
+    public Viatura(String matricula, ModeloViatura modelo, Estacao estacao) {
         this.matricula = Validator.requireNonBlankTrimmed(matricula);
         this.modelo = Objects.requireNonNull(modelo);
         this.estacao = Objects.requireNonNull(estacao);
+        estacao.adicionarViatura(this);
     }
     
     public String getMatricula() {
@@ -25,7 +25,7 @@ public class Viatura {
         return modelo;
     }
     
-    public EstacaoGrande getEstacao() {
+    public Estacao getEstacao() {
         return estacao;
     }
 }

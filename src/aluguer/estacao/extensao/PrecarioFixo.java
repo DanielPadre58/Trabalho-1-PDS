@@ -1,4 +1,4 @@
-﻿package aluguer.estacao.extensao;
+package aluguer.estacao.extensao;
 
 import pds.util.Validator;
 

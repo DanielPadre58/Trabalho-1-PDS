@@ -1,4 +1,4 @@
-﻿package aluguer.viatura;
+package aluguer.viatura;
 
 import pds.tempo.IntervaloTempo;
 

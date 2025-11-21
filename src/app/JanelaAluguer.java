@@ -16,7 +16,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -29,8 +32,12 @@ import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 import javax.swing.table.DefaultTableModel;
 
+import aluguer.Aluguer;
 import aluguer.BESTAuto;
+import aluguer.estacao.Estacao;
 import aluguer.viatura.Categoria;
+import aluguer.viatura.ModeloViatura;
+import aluguer.viatura.Viatura;
 import pds.tempo.HorarioDiario;
 import pds.tempo.HorarioSemanal;
 import pds.tempo.IntervaloTempo;
@@ -74,13 +81,15 @@ public class JanelaAluguer extends JFrame {
 	// A companhia a ser usada
 	private BESTAuto bestAuto;
 
+	private Estacao estacaoAtual;
+
 	/**
 	 * Cria uma janela de aluguer
 	 */
 	public JanelaAluguer(BESTAuto a) {
 		bestAuto = a;
 		setTitle("bEST Auto - A melhor experiência em aluguer de automóveis");
-		
+
 		Vector<String> nomes = new Vector<>();
 		bestAuto.getEstacoes().forEach(e -> nomes.add(e.getNome()));
 		setupJanela(nomes);
@@ -88,11 +97,12 @@ public class JanelaAluguer extends JFrame {
 
 	/**
 	 * Método chamado quando o utilizador muda de estação
-	 * 
+	 *
 	 * @param selecionadaIndex o índice da estação selecionada
 	 */
 	private void escolherEstacao(int selecionadaIndex) {
 		// TODO selecionar a estação adequada
+		estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
 
 		// limpar a pesquisa
 		limparPesquisa();
@@ -102,9 +112,10 @@ public class JanelaAluguer extends JFrame {
 	 * método chamado quando o utilizador pressiona o botão de apresentar horário
 	 */
 	private void apresentarHorario() {
-		// TODO ir buscar o horário da estação atual, em vez de usar um vazio
-		HorarioSemanal hs = HorarioSemanal.sempreFechado();
-
+		if(estacaoAtual == null)
+			return;
+		
+		HorarioSemanal hs = estacaoAtual.getHorario();
 		apresentarHorario(hs);
 	}
 
@@ -124,31 +135,50 @@ public class JanelaAluguer extends JFrame {
 			return;
 		}
 		intervaloSel = IntervaloTempo.entre(inicio, fim);
-
-		// TODO fazer a pesquisa
-
-		// TODO para cada viatura da pesquisa criar um painel e
-		// associar a informação adequada. Cada painel terá um valor (à escolha do
-		// grupo) que o associará a um resultado. Esse valor será depois usado
-		// para identificar qual a viatura alugada se o cliente escolher esse painel
-		PainelAluguer pa1 = new PainelAluguer("Koenigsegg Gemera", 4, 1, 120000, null);
-		alugueres.add(pa1);
-		PainelAluguer pa2 = new PainelAluguer("Koenigsegg Jesko Attack", 2, 1, 100000, null);
-		alugueres.add(pa2);
-
-		// TODO sem resultados (alterar o teste, claro!)? Apresentar essa informação
-		if (Math.abs(2) == -1)
+		Categoria categoria = (Categoria) categCb.getSelectedItem();
+		
+		if(!estacaoAtual.estaAberta(inicio) && !estacaoAtual.estaAberta(fim))
+			return;
+		
+		List<Viatura> resultados = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId());
+		List<ModeloViatura> modeloEncontrados = new ArrayList<>();
+		for(Viatura viatura : resultados) {
+			modeloEncontrados.add(viatura.getModelo());
+		}
+		
+		if(estacaoAtual.getCentral() != null) {
+			List<Viatura> viaturasCentral = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId());
+			for(Viatura viatura : viaturasCentral) {
+				if(!modeloEncontrados.contains(viatura.getModelo())) {
+					resultados.add(viatura);
+				}
+			}
+		}
+		
+		for(Viatura viatura : resultados) {
+			PainelAluguer painelAluguer = new PainelAluguer(
+					viatura.getModelo().getModelo(),
+					viatura.getModelo().getLotacao(),
+					viatura.getModelo().getBagagem(),
+					viatura.,
+					viatura
+			);
+			alugueres.add(painelAluguer);
+		}
+		
+		if (resultados.isEmpty())
 			alugueres.add(new JLabel("-- SEM RESULTADOS --", JLabel.CENTER));
 	}
 
 	/**
 	 * Método chamado quando o utilizador pressiona o botão de alugar.
-	 * 
+	 *
 	 * @param valor o objeto selecionado. Este valor foi o usado
 	 *              quando se criou o painel de aluguer
 	 */
 	private void alugar(Object valor) {
 		// TODO fazer o aluguer
+		Aluguer aluguer = new Aluguer((Viatura) valor, )
 
 		// TODO colocar a info certa nas variáveis
 		String code = "AA1122BB";
@@ -163,7 +193,7 @@ public class JanelaAluguer extends JFrame {
 
 	/**
 	 * Cria e configura a janela
-	 * 
+	 *
 	 * @param nomes nomes das estações a usar
 	 */
 	private void setupJanela(Vector<String> nomes) {
@@ -199,7 +229,7 @@ public class JanelaAluguer extends JFrame {
 
 	/**
 	 * Cria o painel para escolha dos tempos de início e de fim
-	 * 
+	 *
 	 * @return o painel configurado
 	 */
 	private JPanel setupEscolhaTempos() {
@@ -287,7 +317,7 @@ public class JanelaAluguer extends JFrame {
 
 	/**
 	 * Cria a zona de escolha das estações e preenche-a com os respetivos nomes
-	 * 
+	 *
 	 * @param nomes os nomes das estações
 	 * @return o painel configurado
 	 */
@@ -311,7 +341,7 @@ public class JanelaAluguer extends JFrame {
 	/**
 	 * Método chamado quando o utilizador pressiona o botão de ver o horário da
 	 * estação
-	 * 
+	 *
 	 * @param h o horário da estação
 	 */
 	private void apresentarHorario(HorarioSemanal h) {
