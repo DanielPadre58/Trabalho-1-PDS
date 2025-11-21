@@ -1,6 +1,6 @@
 ﻿package aluguer;
 
-import aluguer.estacao.Estacao;
+import aluguer.estacao.EstacaoGrande;
 import aluguer.viatura.Viatura;
 import pds.util.Validator;
 
@@ -9,11 +9,11 @@ import java.util.Objects;
 
 public class Aluguer {
     private final  Viatura viatura;
-    private final Estacao estacao;
+    private final EstacaoGrande estacao;
     private final long custoTotal;
     private final LocalDateTime inicio;
     
-    public Aluguer(Viatura viatura, Estacao estacao, long custoTotal, LocalDateTime inicio) {
+    public Aluguer(Viatura viatura, EstacaoGrande estacao, long custoTotal, LocalDateTime inicio) {
         this.viatura = Objects.requireNonNull(viatura);
         this.estacao = Objects.requireNonNull(estacao);
         this.custoTotal = Validator.requirePositiveOrZero(custoTotal);
@@ -24,7 +24,7 @@ public class Aluguer {
         return viatura;
     }
     
-    public Estacao getEstacao() {
+    public EstacaoGrande getEstacao() {
         return estacao;
     }
     

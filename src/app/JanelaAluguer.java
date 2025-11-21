@@ -80,12 +80,9 @@ public class JanelaAluguer extends JFrame {
 	public JanelaAluguer(BESTAuto a) {
 		bestAuto = a;
 		setTitle("bEST Auto - A melhor experiência em aluguer de automóveis");
-
-		// TODO colocar a lista de nomes das estações (ordenadas alfabeticamente) no
-		// vetor nomes (o que está é apenas de exemplo)
+		
 		Vector<String> nomes = new Vector<>();
-		nomes.add("Alcains");
-		nomes.add("Castelo Branco");
+		bestAuto.getEstacoes().forEach(e -> nomes.add(e.getNome()));
 		setupJanela(nomes);
 	}
 
