@@ -139,7 +139,7 @@ public class Main {
 	private static Estacao processarCentral(BESTAuto best, Bloco b) {
 		if (b.getValor("central") != null) {
 			String central = b.getValor("central");
-			return best.getEstacao(central) == null ? null : best.getEstacao(central).getCentral();
+			return best.getEstacao(central);
 		} else {
 			// não tem central
 			return null;

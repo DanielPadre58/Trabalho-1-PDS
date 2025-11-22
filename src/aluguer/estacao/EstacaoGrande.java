@@ -1,6 +1,5 @@
 package aluguer.estacao;
 
-import aluguer.Aluguer;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
@@ -50,6 +49,16 @@ public class EstacaoGrande implements Estacao {
         return false;
     }
 
+    @Override
+    public boolean estaAbertaComExtensao(LocalDateTime hora) {
+        return true;
+    }
+
+    @Override
+    public long getCustoExtensao(long precoVeiculo) {
+        return 0;
+    }
+    
     @Override
     public Estacao getCentral() {
         return central;

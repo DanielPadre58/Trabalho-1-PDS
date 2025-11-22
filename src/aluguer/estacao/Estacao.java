@@ -18,6 +18,10 @@ public interface Estacao {
     
     public boolean estaAbertaEmExtensao(LocalDateTime hora);
 
+    public boolean estaAbertaComExtensao(LocalDateTime hora);
+    
+    public long getCustoExtensao(long precoVeiculo);
+
     Estacao getCentral();
 
     void setCentral(Estacao central);

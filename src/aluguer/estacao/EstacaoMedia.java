@@ -8,9 +8,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 
 public class EstacaoMedia extends EstacaoGrande {    
-    private HorarioSemanal horario;
-    private Extensao extensao;
-    private PrecarioExtensao precoExtensao;
+    private final HorarioSemanal horario;
+    private final Extensao extensao;
+    private final PrecarioExtensao precoExtensao;
     
     public EstacaoMedia(String id, String nome, HorarioSemanal horario, Extensao extensao, PrecarioExtensao precoExtensao) {
         super(id, nome);
@@ -32,20 +32,24 @@ public class EstacaoMedia extends EstacaoGrande {
     public HorarioSemanal getHorario() {
         return horario;
     }
-    
+
     @Override
     public boolean estaAberta(LocalDateTime hora){
-        if(horario.estaDentroHorario(hora))
-            return true;
-
-        if(extensao == null)
-            return false;
-
-        return extensao.estaHorarioExtendido(hora, horario);
+        return horario.estaDentroHorario(hora);
     }
 
     @Override
     public boolean estaAbertaEmExtensao(LocalDateTime hora) {
         return extensao.estaHorarioExtendido(hora, horario);
+    }
+
+    @Override
+    public boolean estaAbertaComExtensao(LocalDateTime hora) {
+        return estaAbertaEmExtensao(hora) || estaAberta(hora);
+    }
+    
+    @Override
+    public long getCustoExtensao(long precoVeiculo) {
+        return precoExtensao.calcularCusto(precoVeiculo);
     }
 }

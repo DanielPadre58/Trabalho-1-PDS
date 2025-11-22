@@ -1,5 +1,5 @@
 package aluguer.estacao.extensao;
 
 public interface PrecarioExtensao {
-    long calcularCusto(long vehicleDailyPrice);
+    long calcularCusto(long precoVeiculo);
 }

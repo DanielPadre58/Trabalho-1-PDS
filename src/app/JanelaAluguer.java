@@ -140,11 +140,14 @@ public class JanelaAluguer extends JFrame {
 		if(!estacaoAtual.estaAberta(inicio) && !estacaoAtual.estaAberta(fim))
 			return;
 		
+		if(!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim))
+			return;
+		
 		List<Viatura> resultados = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId());
-		List<ModeloViatura> modeloEncontrados = new ArrayList<>();
-		for(Viatura viatura : resultados) {
-			modeloEncontrados.add(viatura.getModelo());
-		}
+		List<ModeloViatura> modeloEncontrados = resultados.stream()
+				.map(Viatura::getModelo)
+				.distinct()
+				.toList();
 		
 		if(estacaoAtual.getCentral() != null) {
 			List<Viatura> viaturasCentral = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId());
@@ -156,12 +159,22 @@ public class JanelaAluguer extends JFrame {
 		}
 		
 		for(Viatura viatura : resultados) {
+			ResultadoPesquisa resultadoPesquisa = new ResultadoPesquisa(
+					viatura, 
+					bestAuto.calcularCustoTotal(
+						estacaoAtual.getId(),
+						viatura.getModelo().getId(),
+						intervaloSel,
+						viatura.getEstacao() != estacaoAtual),
+					intervaloSel
+			);
+			
 			PainelAluguer painelAluguer = new PainelAluguer(
-					viatura.getModelo().getModelo(),
-					viatura.getModelo().getLotacao(),
-					viatura.getModelo().getBagagem(),
-					viatura.,
-					viatura
+					resultadoPesquisa.getViatura().getModelo().getModelo(),
+					resultadoPesquisa.getViatura().getModelo().getLotacao(),
+					resultadoPesquisa.getViatura().getModelo().getBagagem(),
+					resultadoPesquisa.getCustoTotal(),
+					resultadoPesquisa
 			);
 			alugueres.add(painelAluguer);
 		}
@@ -178,11 +191,18 @@ public class JanelaAluguer extends JFrame {
 	 */
 	private void alugar(Object valor) {
 		// TODO fazer o aluguer
-		Aluguer aluguer = new Aluguer((Viatura) valor, )
+		ResultadoPesquisa resultadoPesquisa = (ResultadoPesquisa) valor;
+		Aluguer aluguer = new Aluguer(
+				bestAuto.gerarCodigoAluguer(),
+				resultadoPesquisa.getViatura(), 
+				estacaoAtual, 
+				resultadoPesquisa.getCustoTotal(), 
+				resultadoPesquisa.getIntervalo().getInicio()
+		);
 
 		// TODO colocar a info certa nas variáveis
-		String code = "AA1122BB";
-		String matricula = "ZZ-99-ZZ";
+		String code = aluguer.getId();
+		String matricula = aluguer.getViatura().getMatricula();
 
 		// apresentar a info
 		JOptionPane.showMessageDialog(this,

@@ -5,7 +5,9 @@ import aluguer.viatura.Categoria;
 import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 import pds.tempo.IntervaloTempo;
+import pds.util.GeradorCodigos;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +25,7 @@ public class BESTAuto {
         alugueres = new ArrayList<>();
         modelos = new ArrayList<>();
     }
-    
+
     public void adicionarEstacao(Estacao estacao) {
         estacoes.add(estacao);
     }
@@ -34,7 +36,7 @@ public class BESTAuto {
                 .findFirst()
                 .orElse(null);
     }
-    
+
     public List<Estacao> getEstacoes() {
         return Collections.unmodifiableList(estacoes);
     }
@@ -45,29 +47,47 @@ public class BESTAuto {
                 .findFirst()
                 .orElse(null);
     }
-    
+
     public List<ModeloViatura> getModelos() {
         return Collections.unmodifiableList(modelos);
     }
-    
+
     public void adicionarModelo(ModeloViatura modelo) {
         modelos.add(modelo);
     }
-    
+
     public void adicionarAluguer(Aluguer aluguer) {
         alugueres.add(aluguer);
     }
-    
+
     public List<Viatura> pesquisarViaturas(Categoria categoria, String estacao) {
-        return getEstacao(estacao)
+        return new ArrayList<Viatura>(
+                getEstacao(estacao)
                 .getViaturas()
                 .stream()
                 .filter(v -> v.getModelo().getCategoria().equals(categoria))
-                .toList();
+                .toList()
+        );
+    }
+
+    public long calcularCustoTotal(String estacao, String modelo,  IntervaloTempo intervalo, boolean daCentral) {
+        int dias = (int)Math.ceil(intervalo.duracao().toHours() / 24.0);
+        if (daCentral)
+            dias += 2;
+        long custoTotal = getModelo(modelo).getPreco() * dias;        
+        
+        Estacao est = getEstacao(estacao);
+        if (est.estaAbertaEmExtensao(intervalo.getInicio()) || est.estaAbertaEmExtensao(intervalo.getFim()))
+            custoTotal = est.getCustoExtensao(custoTotal);
+        
+        return custoTotal;
     }
     
-    public long calcularCustoTotal(String estacao, String modelo, IntervaloTempo intervalo) {
-        int dias = (int)Math.ceil(intervalo.duracao().toHours() / 24.0);
-        long custoTotal = getModelo(modelo).getPreco() * dias;
+    public String gerarCodigoAluguer() {
+        String codigo = GeradorCodigos.gerarCodigo(8);
+        if(alugueres.stream().anyMatch(aluguer -> aluguer.getId().equals(codigo)))
+            return gerarCodigoAluguer();
+        
+        return codigo;
     }
 }

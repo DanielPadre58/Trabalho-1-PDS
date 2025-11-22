@@ -15,7 +15,7 @@ public class ExtensaoPorHora implements Extensao {
     
     @Override
     public boolean estaHorarioExtendido(LocalDateTime momento, HorarioSemanal horario) {
-        if (!horario.estaDentroHorario(momento)) {
+        if (horario.estaDentroHorario(momento)) {
             return false;
         }
 
@@ -27,7 +27,7 @@ public class ExtensaoPorHora implements Extensao {
         }
         
         LocalTime abertura = horario.getHorarioDia(dia).getInicio();
-        if (hora.isAfter(abertura.minusHours(horasExtendidas)) &&  hora.isBefore(abertura)) {
+        if (hora.isAfter(abertura.minusHours(horasExtendidas)) && hora.isBefore(abertura)) {
             return true;
         }
 
