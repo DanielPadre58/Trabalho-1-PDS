@@ -11,6 +11,6 @@ public class PrecarioFixo implements PrecarioExtensao{
 
     @Override
     public long calcularCusto(long precoVeiculo) {
-        return taxaFixa + precoVeiculo;
+        return taxaFixa;
     }
 }

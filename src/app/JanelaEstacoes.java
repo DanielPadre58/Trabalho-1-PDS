@@ -28,6 +28,7 @@ import static javax.swing.SpringLayout.*;
 import aluguer.BESTAuto;
 import aluguer.estacao.Estacao;
 import aluguer.viatura.Categoria;
+import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 
 @SuppressWarnings("serial")
@@ -68,12 +69,7 @@ public class JanelaEstacoes extends JFrame {
 		// TODO escolher a estação e colocar na lista as categorias suportas por esta
 		estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
 		// estação (neste momento está a colocar todas)
-
-		Collection<Categoria> lista = estacaoAtual.getViaturas()
-				.stream()
-				.map(viatura -> viatura.getModelo().getCategoria())
-				.distinct()
-				.collect(Collectors.toCollection(ArrayList<Categoria>::new));
+		Collection<Categoria> lista = estacaoAtual.getCategorias();
 
 		// limpar as restantes listas todas
 		categoriasModel.clear();
@@ -94,11 +90,11 @@ public class JanelaEstacoes extends JFrame {
 	private void escolherCategoria(Categoria c) {
 		// TODO colocar na lista o nome dos modelos que a estação selecionada tem nesta
 		// categoria (Neste momento é apenas um exemplo)
-		List<String> modelos = estacaoAtual.getViaturas()
+		List<String> modelos = estacaoAtual.getModelos()
 				.stream()
-				.map(viatura -> viatura.getModelo().getModelo())
-				.distinct()
-				.collect(Collectors.toCollection(ArrayList<String>::new));
+				.filter(modelo -> modelo.getCategoria().equals(c))
+				.map(ModeloViatura::getModelo)
+				.collect(Collectors.toList());
 
 		// limpar as restantes listas
 		modelosModel.clear();

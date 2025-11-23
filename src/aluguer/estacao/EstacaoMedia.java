@@ -21,7 +21,6 @@ public class EstacaoMedia extends EstacaoGrande {
                     horario.getHorarioDia(d).contem(LocalDateTime.MIN.toLocalTime()))
                 throw new IllegalArgumentException("Uma estação média não pode ficar aberta o dia todo");
         }
-            
         this.horario = horario;
         
         this.extensao = extensao;

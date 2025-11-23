@@ -7,7 +7,6 @@ import aluguer.viatura.Viatura;
 import pds.tempo.IntervaloTempo;
 import pds.util.GeradorCodigos;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,21 +70,27 @@ public class BESTAuto {
     }
 
     public long calcularCustoTotal(String estacao, String modelo,  IntervaloTempo intervalo, boolean daCentral) {
+        long precoDiario = getModelo(modelo).getPreco();
         int dias = (int)Math.ceil(intervalo.duracao().toHours() / 24.0);
         if (daCentral)
             dias += 2;
-        long custoTotal = getModelo(modelo).getPreco() * dias;        
+        long custoTotal = precoDiario * dias;
         
         Estacao est = getEstacao(estacao);
-        if (est.estaAbertaEmExtensao(intervalo.getInicio()) || est.estaAbertaEmExtensao(intervalo.getFim()))
-            custoTotal = est.getCustoExtensao(custoTotal);
+        if (est.estaAbertaEmExtensao(intervalo.getInicio())) {
+            custoTotal += est.getCustoExtensao(precoDiario);
+        }
         
+        if (est.estaAbertaEmExtensao(intervalo.getFim())) {
+            custoTotal += est.getCustoExtensao(precoDiario);
+        }
+
         return custoTotal;
     }
     
     public String gerarCodigoAluguer() {
         String codigo = GeradorCodigos.gerarCodigo(8);
-        if(alugueres.stream().anyMatch(aluguer -> aluguer.getId().equals(codigo)))
+        if(alugueres.stream().anyMatch(a -> a.getId().equals(codigo)))
             return gerarCodigoAluguer();
         
         return codigo;

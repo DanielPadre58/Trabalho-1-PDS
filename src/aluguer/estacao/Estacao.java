@@ -1,5 +1,7 @@
 package aluguer.estacao;
 
+import aluguer.viatura.Categoria;
+import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
@@ -30,7 +32,13 @@ public interface Estacao {
 
     List<Viatura> getViaturas();
     
+    List<Categoria> getCategorias();
+    
+    List<ModeloViatura> getModelos();
+    
     List<ViaturaIndisponivel> getViaturasIndisponiveis();
     
     void adicionarViaturaIndisponivel(ViaturaIndisponivel viatura);
+
+    void removerViaturaIndisponivel(ViaturaIndisponivel viatura);
 }

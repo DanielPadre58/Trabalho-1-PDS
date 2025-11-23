@@ -2,9 +2,9 @@ package aluguer;
 
 import aluguer.estacao.Estacao;
 import aluguer.viatura.Viatura;
+import pds.tempo.IntervaloTempo;
 import pds.util.Validator;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Aluguer {
@@ -12,14 +12,14 @@ public class Aluguer {
     private final  Viatura viatura;
     private final Estacao estacao;
     private final long custoTotal;
-    private final LocalDateTime inicio;
+    private final IntervaloTempo periodoAluguer;
     
-    public Aluguer(String id, Viatura viatura, Estacao estacao, long custoTotal, LocalDateTime inicio) {
+    public Aluguer(String id, Viatura viatura, Estacao estacao, long custoTotal, IntervaloTempo periodoAluguer) {
         this.id = Validator.requireNonBlankTrimmed(id);
         this.viatura = Objects.requireNonNull(viatura);
         this.estacao = Objects.requireNonNull(estacao);
         this.custoTotal = Validator.requirePositiveOrZero(custoTotal);
-        this.inicio = Objects.requireNonNull(inicio);
+        this.periodoAluguer = Objects.requireNonNull(periodoAluguer);
     }
     
     public String getId() {
@@ -38,7 +38,7 @@ public class Aluguer {
         return custoTotal;
     }
     
-    public LocalDateTime getInicio() {
-        return inicio;
+    public IntervaloTempo getPeriodoAluguer() {
+        return periodoAluguer;
     }
 }

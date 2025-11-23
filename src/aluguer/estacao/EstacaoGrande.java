@@ -1,5 +1,7 @@
 package aluguer.estacao;
 
+import aluguer.viatura.Categoria;
+import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
@@ -9,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class EstacaoGrande implements Estacao {
     private final String id;
@@ -80,6 +83,24 @@ public class EstacaoGrande implements Estacao {
     }
 
     @Override
+    public List<Categoria> getCategorias() {
+        return viaturas
+                .stream()
+                .map(viatura -> viatura.getModelo().getCategoria())
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public List<ModeloViatura> getModelos() {
+        return viaturas
+                .stream()
+                .map(Viatura::getModelo)
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList<ModeloViatura>::new));
+    }
+
+    @Override
     public List<ViaturaIndisponivel> getViaturasIndisponiveis() {
         return Collections.unmodifiableList(viaturasIndisponiveis);
     }
@@ -87,5 +108,10 @@ public class EstacaoGrande implements Estacao {
     @Override
     public void adicionarViaturaIndisponivel(ViaturaIndisponivel viatura) {
         viaturasIndisponiveis.add(viatura);
+    }
+    
+    @Override
+    public void removerViaturaIndisponivel(ViaturaIndisponivel viatura) {
+        viaturasIndisponiveis.remove(viatura);
     }
 }
