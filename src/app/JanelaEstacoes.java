@@ -3,9 +3,11 @@ package app;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
@@ -24,7 +26,9 @@ import javax.swing.table.TableColumnModel;
 import static javax.swing.SpringLayout.*;
 
 import aluguer.BESTAuto;
+import aluguer.estacao.Estacao;
 import aluguer.viatura.Categoria;
+import aluguer.viatura.Viatura;
 
 @SuppressWarnings("serial")
 /**
@@ -37,18 +41,21 @@ public class JanelaEstacoes extends JFrame {
 	DefaultListModel<String> modelosModel = new DefaultListModel<>();
 	DefaultListModel<String> matriculasModel = new DefaultListModel<>();
 	DefaultTableModel indisponibilidadesModel;
+	
+	BESTAuto bestAuto;
+	
+	Estacao estacaoAtual;
 
 	/**
 	 * Cria uma janela para apresentar informações sobre uma estação
 	 */
 	public JanelaEstacoes(BESTAuto a) {
+		bestAuto = a;
 		setTitle("bEST Auto - A melhor experiência em aluguer de automóveis");
-
-		// TODO colocar a lista de nomes das estações (ordenadas alfabeticamente) no
+		
 		// vetor nomes (o que está é apenas de exemplo)
 		Vector<String> nomes = new Vector<>();
-		nomes.add("Alcains");
-		nomes.add("Castelo Branco");
+		a.getEstacoes().forEach(e -> nomes.add(e.getNome()));
 		setupJanela(nomes);
 	}
 
@@ -59,9 +66,14 @@ public class JanelaEstacoes extends JFrame {
 	 */
 	private void escolherEstacao(int selecionadaIndex) {
 		// TODO escolher a estação e colocar na lista as categorias suportas por esta
+		estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
 		// estação (neste momento está a colocar todas)
 
-		Collection<Categoria> lista = List.of(Categoria.values());
+		Collection<Categoria> lista = estacaoAtual.getViaturas()
+				.stream()
+				.map(viatura -> viatura.getModelo().getCategoria())
+				.distinct()
+				.collect(Collectors.toCollection(ArrayList<Categoria>::new));
 
 		// limpar as restantes listas todas
 		categoriasModel.clear();
@@ -82,7 +94,11 @@ public class JanelaEstacoes extends JFrame {
 	private void escolherCategoria(Categoria c) {
 		// TODO colocar na lista o nome dos modelos que a estação selecionada tem nesta
 		// categoria (Neste momento é apenas um exemplo)
-		List<String> modelos = List.of("Koenigsegg Gemera", "Koenigsegg Jesko Attack");
+		List<String> modelos = estacaoAtual.getViaturas()
+				.stream()
+				.map(viatura -> viatura.getModelo().getModelo())
+				.distinct()
+				.collect(Collectors.toCollection(ArrayList<String>::new));
 
 		// limpar as restantes listas
 		modelosModel.clear();
@@ -101,7 +117,11 @@ public class JanelaEstacoes extends JFrame {
 	private void escolherModelo(String modelo) {
 		// TODO colocar na lista todas as matrículas das viaturas do modelo selecionado,
 		// o que está é apenas um exemplo
-		List<String> matriculas = List.of("ZZ-98-ZZ", "ZZ-99-ZZ");
+		List<String> matriculas = estacaoAtual.getViaturas()
+				.stream()
+				.filter(viatura -> viatura.getModelo().getModelo().equals(modelo))
+				.map(Viatura::getMatricula)
+				.collect(Collectors.toCollection(ArrayList<String>::new));
 
 		// limpar as restantes listas
 		matriculasModel.clear();
