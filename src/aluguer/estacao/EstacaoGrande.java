@@ -123,6 +123,9 @@ public class EstacaoGrande implements Estacao {
     
     @Override
     public void adicionarViaturaIndisponivel(ViaturaIndisponivel viatura) {
+        if(!viaturas.contains(viatura.getViatura()))
+            return;
+        
         viaturasIndisponiveis.add(viatura);
     }
     

@@ -109,24 +109,35 @@ public class BESTAuto {
                 .filter(v -> v.getViatura().getMatricula().equals(matricula))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
+    
+    private long calcularCustoDiario(ModeloViatura modelo, IntervaloTempo intervalo) {
+        int dias = (int) Math.ceil(intervalo.duracao().toHours() / 24.0);
+        return modelo.getPreco() * dias;
+    }
+    
+    private long calcularTaxaCentral(ModeloViatura modelo) {
+        return modelo.getPreco() * 2;
+    }
+    
+    private long calcularCustoExtensao(Estacao estacao, ModeloViatura modelo, IntervaloTempo intervalo) {
+        long custoExtensao = 0;
+        if (estacao.estaAbertaEmExtensao(intervalo.getInicio())) {
+            custoExtensao += estacao.getCustoExtensao(modelo.getPreco());
+        }
+
+        if (estacao.estaAbertaEmExtensao(intervalo.getFim())) {
+            custoExtensao += estacao.getCustoExtensao(modelo.getPreco());
+        }
+        
+        return custoExtensao;
+    }
 
     public long calcularCustoTotal(String estacao, String modelo, IntervaloTempo intervalo, boolean daCentral) {
-        long precoDiario = getModelo(modelo).getPreco();
-        int dias = (int) Math.ceil(intervalo.duracao().toHours() / 24.0);
-        if (daCentral)
-            dias += 2;
-        long custoTotal = precoDiario * dias;
-
         Estacao est = getEstacao(estacao);
-        if (est.estaAbertaEmExtensao(intervalo.getInicio())) {
-            custoTotal += est.getCustoExtensao(precoDiario);
-        }
-
-        if (est.estaAbertaEmExtensao(intervalo.getFim())) {
-            custoTotal += est.getCustoExtensao(precoDiario);
-        }
-
-        return custoTotal;
+        ModeloViatura mod = getModelo(modelo);
+        
+        return daCentral ? calcularTaxaCentral(mod) + calcularCustoExtensao(est, mod, intervalo) + calcularCustoDiario(mod, intervalo) : 
+                calcularCustoDiario(mod, intervalo)  + calcularCustoExtensao(est, mod, intervalo);
     }
 
     public String gerarCodigoAluguer() {
@@ -135,5 +146,12 @@ public class BESTAuto {
             return gerarCodigoAluguer();
 
         return codigo;
+    }
+    
+    public boolean eDaCentral(String estacao, String matricula) {
+        Estacao est = getEstacao(estacao);
+        return est.getCentral().getViaturas()
+                .stream()
+                .anyMatch(v -> v.getMatricula().equals(matricula));
     }
 }

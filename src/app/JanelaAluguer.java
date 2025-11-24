@@ -11,10 +11,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridLayout;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,20 +128,18 @@ public class JanelaAluguer extends JFrame {
         // ver as datas de inicio e de fim
         LocalDateTime inicio = LocalDateTime.of(dataInicio, horasInicio);
         LocalDateTime fim = LocalDateTime.of(dataFim, horasFim);
+        intervaloSel = IntervaloTempo.entre(inicio, fim);
         // garantir que fim é, pelo menos, um dia depois do início
-        if (!inicio.isBefore(fim) || !dataInicio.isBefore(dataFim)) {
+        if (intervaloSel.duracao().toHours() < 24) {
             JOptionPane.showMessageDialog(null,
                     "A data de fim tem de ser superior em 1 dia, pelo menos, à data de início");
             return;
         }
-        intervaloSel = IntervaloTempo.entre(inicio, fim);
         Categoria categoria = (Categoria) categCb.getSelectedItem();
 
-        if (!estacaoAtual.estaAberta(inicio) && !estacaoAtual.estaAberta(fim))
-            return;
-
-        if (!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim))
-            return;
+        if (!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim)) {
+            alugueres.add(new JLabel("-- A ESTAÇÃO DEVE ESTAR ABERTA EM PELO MENOS UMA DAS HORAS --", JLabel.CENTER));
+        }
 
         List<Viatura> resultadosLocais = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId(), intervaloSel);
         Set<ModeloViatura> modelosEncontrados = resultadosLocais
@@ -164,7 +159,7 @@ public class JanelaAluguer extends JFrame {
         resultadosLocais
                 .stream()
                 .map(viatura -> {
-                    boolean daCentral = viatura.getEstacao() != estacaoAtual;
+                    boolean daCentral = bestAuto.eDaCentral(estacaoAtual.getId(), viatura.getMatricula());
                     long custoTotal = bestAuto.calcularCustoTotal(
                             estacaoAtual.getId(),
                             viatura.getModelo().getId(),
@@ -196,7 +191,6 @@ public class JanelaAluguer extends JFrame {
      *              quando se criou o painel de aluguer
      */
     private void alugar(Object valor) {
-        // TODO fazer o aluguer
         ResultadoPesquisa resultadoPesquisa = (ResultadoPesquisa) valor;
         Aluguer aluguer = new Aluguer(
                 bestAuto.gerarCodigoAluguer(),

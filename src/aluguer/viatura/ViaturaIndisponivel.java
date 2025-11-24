@@ -34,6 +34,6 @@ public class ViaturaIndisponivel {
     }
     
     public boolean estaIndisponivel(IntervaloTempo periodo) {
-        return periodoIndisponibilidade.engloba( periodo);
+        return periodoIndisponibilidade.interseta( periodo);
     }
 }
