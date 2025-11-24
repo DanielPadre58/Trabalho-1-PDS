@@ -18,6 +18,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
@@ -49,404 +50,409 @@ import pds.ui.PainelListador;
  */
 public class JanelaAluguer extends JFrame {
 
-	/** formatador para apresentar as datas */
-	private static final DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-	private static final DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm");
-	// fontes e cores para a interface gráfica
-	private static Font grandeFont = new Font("ROMAN", Font.BOLD, 16);
-	private static Font mediaFont = new Font("ROMAN", Font.PLAIN, 13);
-	private static final Color COR_RESULTADO = new Color(250, 215, 170);
+    /**
+     * formatador para apresentar as datas
+     */
+    private static final DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    // fontes e cores para a interface gráfica
+    private static Font grandeFont = new Font("ROMAN", Font.BOLD, 16);
+    private static Font mediaFont = new Font("ROMAN", Font.PLAIN, 13);
+    private static final Color COR_RESULTADO = new Color(250, 215, 170);
 
-	// Elementos visuais da interface
-	private JComboBox<Categoria> categCb = new JComboBox<>(Categoria.values());
-	private PainelListador alugueres = new PainelListador();
-	private JButton deBt;
-	private JButton ateBt;
+    // Elementos visuais da interface
+    private JComboBox<Categoria> categCb = new JComboBox<>(Categoria.values());
+    private PainelListador alugueres = new PainelListador();
+    private JButton deBt;
+    private JButton ateBt;
 
-	// listas e tabelas com as várias informações
-	DefaultListModel<Categoria> categoriasModel = new DefaultListModel<>();
-	DefaultListModel<String> modelosModel = new DefaultListModel<>();
-	DefaultListModel<String> matriculasModel = new DefaultListModel<>();
-	DefaultTableModel indisponibilidadesModel;
+    // listas e tabelas com as várias informações
+    DefaultListModel<Categoria> categoriasModel = new DefaultListModel<>();
+    DefaultListModel<String> modelosModel = new DefaultListModel<>();
+    DefaultListModel<String> matriculasModel = new DefaultListModel<>();
+    DefaultTableModel indisponibilidadesModel;
 
-	// valores escohidos pelo utilizador para as datas
-	private LocalDate dataInicio;
-	private LocalDate dataFim;
-	private LocalTime horasInicio;
-	private LocalTime horasFim;
+    // valores escohidos pelo utilizador para as datas
+    private LocalDate dataInicio;
+    private LocalDate dataFim;
+    private LocalTime horasInicio;
+    private LocalTime horasFim;
 
-	// intervalo de tempo selecionado pelo utilziador
-	private IntervaloTempo intervaloSel;
+    // intervalo de tempo selecionado pelo utilziador
+    private IntervaloTempo intervaloSel;
 
-	// A companhia a ser usada
-	private BESTAuto bestAuto;
+    // A companhia a ser usada
+    private BESTAuto bestAuto;
 
-	private Estacao estacaoAtual;
+    private Estacao estacaoAtual;
 
-	/**
-	 * Cria uma janela de aluguer
-	 */
-	public JanelaAluguer(BESTAuto a) {
-		bestAuto = a;
-		setTitle("bEST Auto - A melhor experiência em aluguer de automóveis");
+    /**
+     * Cria uma janela de aluguer
+     */
+    public JanelaAluguer(BESTAuto a) {
+        bestAuto = a;
+        setTitle("bEST Auto - A melhor experiência em aluguer de automóveis");
 
-		Vector<String> nomes = new Vector<>();
-		bestAuto.getEstacoes().forEach(e -> nomes.add(e.getNome()));
-		setupJanela(nomes);
-	}
+        Vector<String> nomes = new Vector<>();
+        bestAuto.getEstacoes().forEach(e -> nomes.add(e.getNome()));
+        setupJanela(nomes);
+    }
 
-	/**
-	 * Método chamado quando o utilizador muda de estação
-	 *
-	 * @param selecionadaIndex o índice da estação selecionada
-	 */
-	private void escolherEstacao(int selecionadaIndex) {
-		// TODO selecionar a estação adequada
-		estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
+    /**
+     * Método chamado quando o utilizador muda de estação
+     *
+     * @param selecionadaIndex o índice da estação selecionada
+     */
+    private void escolherEstacao(int selecionadaIndex) {
+        // TODO selecionar a estação adequada
+        estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
 
-		// limpar a pesquisa
-		limparPesquisa();
-	}
+        // limpar a pesquisa
+        limparPesquisa();
+    }
 
-	/**
-	 * método chamado quando o utilizador pressiona o botão de apresentar horário
-	 */
-	private void apresentarHorario() {
-		if(estacaoAtual == null)
-			return;
-		
-		HorarioSemanal hs = estacaoAtual.getHorario();
-		apresentarHorario(hs);
-	}
+    /**
+     * método chamado quando o utilizador pressiona o botão de apresentar horário
+     */
+    private void apresentarHorario() {
+        if (estacaoAtual == null)
+            return;
 
-	/**
-	 * Método chamado quando o utilizador pressiona o botão de pesquisar
-	 */
-	private void pesquisar() {
-		limparPesquisa();
+        HorarioSemanal hs = estacaoAtual.getHorario();
+        apresentarHorario(hs);
+    }
 
-		// ver as datas de inicio e de fim
-		LocalDateTime inicio = LocalDateTime.of(dataInicio, horasInicio);
-		LocalDateTime fim = LocalDateTime.of(dataFim, horasFim);
-		// garantir que fim é, pelo menos, um dia depois do início
-		if (!inicio.isBefore(fim) || !dataInicio.isBefore(dataFim)) {
-			JOptionPane.showMessageDialog(null,
-					"A data de fim tem de ser superior em 1 dia, pelo menos, à data de início");
-			return;
-		}
-		intervaloSel = IntervaloTempo.entre(inicio, fim);
-		Categoria categoria = (Categoria) categCb.getSelectedItem();
-		
-		if(!estacaoAtual.estaAberta(inicio) && !estacaoAtual.estaAberta(fim))
-			return;
-		
-		if(!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim))
-			return;
-		
-		List<Viatura> resultados = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId(), intervaloSel);
-		List<ModeloViatura> modeloEncontrados = resultados.stream()
-				.map(Viatura::getModelo)
-				.distinct()
-				.toList();
-		
-		if(estacaoAtual.getCentral() != null) {
-			List<Viatura> viaturasCentral = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId(), intervaloSel);
-			for(Viatura viatura : viaturasCentral) {
-				if(!modeloEncontrados.contains(viatura.getModelo())) {
-					resultados.add(viatura);
-				}
-			}
-		}
-		
-		for(Viatura viatura : resultados) {
-			boolean daCentral = viatura.getEstacao() != estacaoAtual;
-			ResultadoPesquisa resultadoPesquisa = new ResultadoPesquisa(
-					viatura, 
-					bestAuto.calcularCustoTotal(
-						estacaoAtual.getId(),
-						viatura.getModelo().getId(),
-						intervaloSel,
-						daCentral),
-					intervaloSel,
-					daCentral
-			);
-			
-			PainelAluguer painelAluguer = new PainelAluguer(
-					resultadoPesquisa.getViatura().getModelo().getModelo(),
-					resultadoPesquisa.getViatura().getModelo().getLotacao(),
-					resultadoPesquisa.getViatura().getModelo().getBagagem(),
-					resultadoPesquisa.getCustoTotal(),
-					resultadoPesquisa
-			);
-			alugueres.add(painelAluguer);
-		}
-		
-		if (resultados.isEmpty())
-			alugueres.add(new JLabel("-- SEM RESULTADOS --", JLabel.CENTER));
-	}
+    /**
+     * Método chamado quando o utilizador pressiona o botão de pesquisar
+     */
+    private void pesquisar() {
+        limparPesquisa();
 
-	/**
-	 * Método chamado quando o utilizador pressiona o botão de alugar.
-	 *
-	 * @param valor o objeto selecionado. Este valor foi o usado
-	 *              quando se criou o painel de aluguer
-	 */
-	private void alugar(Object valor) {
-		// TODO fazer o aluguer
-		ResultadoPesquisa resultadoPesquisa = (ResultadoPesquisa) valor;
-		Aluguer aluguer = new Aluguer(
-				bestAuto.gerarCodigoAluguer(),
-				resultadoPesquisa.getViatura(), 
-				estacaoAtual, 
-				resultadoPesquisa.getCustoTotal(), 
-				resultadoPesquisa.getIntervalo()
-		);
-		bestAuto.adicionarAluguer(aluguer, resultadoPesquisa.eDaCentral());
-		
-		String code = aluguer.getId();
-		String matricula = aluguer.getViatura().getMatricula();
+        // ver as datas de inicio e de fim
+        LocalDateTime inicio = LocalDateTime.of(dataInicio, horasInicio);
+        LocalDateTime fim = LocalDateTime.of(dataFim, horasFim);
+        // garantir que fim é, pelo menos, um dia depois do início
+        if (!inicio.isBefore(fim) || !dataInicio.isBefore(dataFim)) {
+            JOptionPane.showMessageDialog(null,
+                    "A data de fim tem de ser superior em 1 dia, pelo menos, à data de início");
+            return;
+        }
+        intervaloSel = IntervaloTempo.entre(inicio, fim);
+        Categoria categoria = (Categoria) categCb.getSelectedItem();
 
-		// apresentar a info
-		JOptionPane.showMessageDialog(this,
-				"<html>Obrigado por usar os nossos serviços!<br>Aluguer " + code + ", carro será " + matricula
-						+ "</html>");
-		limparPesquisa();
-	}
+        if (!estacaoAtual.estaAberta(inicio) && !estacaoAtual.estaAberta(fim))
+            return;
 
-	/**
-	 * Cria e configura a janela
-	 *
-	 * @param nomes nomes das estações a usar
-	 */
-	private void setupJanela(Vector<String> nomes) {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        if (!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim))
+            return;
 
-		SpringLayout layout = new SpringLayout();
-		JPanel panel = new JPanel(layout);
+        List<Viatura> resultadosLocais = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId(), intervaloSel);
+        Set<ModeloViatura> modelosEncontrados = resultadosLocais
+                .stream()
+                .map(Viatura::getModelo)
+                .collect(Collectors.toSet());
 
-		JPanel estacoes = setupEscolhaEstacao(nomes);
-		JPanel tempos = setupEscolhaTempos();
-		JScrollPane scrollAlugueres = new JScrollPane(alugueres);
-		panel.add(estacoes);
-		panel.add(tempos);
-		panel.add(scrollAlugueres);
+        if (estacaoAtual.getCentral() != null)
+            bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId(), intervaloSel)
+                    .stream()
+                    .filter(viatura -> !modelosEncontrados.contains(viatura.getModelo()))
+                    .forEach(viatura -> {
+                        resultadosLocais.add(viatura);
+                        modelosEncontrados.add(viatura.getModelo());
+                    });
 
-		layout.putConstraint(NORTH, estacoes, 2, NORTH, panel);
-		layout.putConstraint(EAST, estacoes, 2, EAST, panel);
-		layout.putConstraint(WEST, estacoes, 2, WEST, panel);
+        resultadosLocais
+                .stream()
+                .map(viatura -> {
+                    boolean daCentral = viatura.getEstacao() != estacaoAtual;
+                    long custoTotal = bestAuto.calcularCustoTotal(
+                            estacaoAtual.getId(),
+                            viatura.getModelo().getId(),
+                            intervaloSel,
+                            daCentral
+                    );
 
-		layout.putConstraint(NORTH, tempos, 2, SOUTH, estacoes);
-		layout.putConstraint(EAST, tempos, 0, EAST, estacoes);
-		layout.putConstraint(WEST, tempos, 0, WEST, estacoes);
-		layout.putConstraint(SOUTH, tempos, 100, NORTH, tempos);
+                    return new ResultadoPesquisa(viatura, custoTotal, intervaloSel, daCentral);
+                })
+                .forEach(resultado -> {
+                    PainelAluguer painelAluguer = new PainelAluguer(
+                            resultado.getViatura().getModelo().getModelo(),
+                            resultado.getViatura().getModelo().getLotacao(),
+                            resultado.getViatura().getModelo().getBagagem(),
+                            resultado.getCustoTotal(),
+                            resultado
+                    );
+                    alugueres.add(painelAluguer);
+                });
 
-		layout.putConstraint(NORTH, scrollAlugueres, 2, SOUTH, tempos);
-		layout.putConstraint(EAST, scrollAlugueres, 0, EAST, estacoes);
-		layout.putConstraint(WEST, scrollAlugueres, 0, WEST, estacoes);
-		layout.putConstraint(SOUTH, scrollAlugueres, 2, SOUTH, panel);
+        if (resultadosLocais.isEmpty())
+            alugueres.add(new JLabel("-- SEM RESULTADOS --", JLabel.CENTER));
+    }
 
-		setContentPane(panel);
-		setSize(450, 680);
-	}
+    /**
+     * Método chamado quando o utilizador pressiona o botão de alugar.
+     *
+     * @param valor o objeto selecionado. Este valor foi o usado
+     *              quando se criou o painel de aluguer
+     */
+    private void alugar(Object valor) {
+        // TODO fazer o aluguer
+        ResultadoPesquisa resultadoPesquisa = (ResultadoPesquisa) valor;
+        Aluguer aluguer = new Aluguer(
+                bestAuto.gerarCodigoAluguer(),
+                resultadoPesquisa.getViatura(),
+                estacaoAtual,
+                resultadoPesquisa.getCustoTotal(),
+                resultadoPesquisa.getIntervalo()
+        );
+        bestAuto.adicionarAluguer(aluguer, resultadoPesquisa.eDaCentral());
 
-	/**
-	 * Cria o painel para escolha dos tempos de início e de fim
-	 *
-	 * @return o painel configurado
-	 */
-	private JPanel setupEscolhaTempos() {
-		String horas[] = new String[48];
-		for (int h = 0; h < 24; h++) {
-			horas[h * 2] = String.format("%02d:00", h);
-			horas[h * 2 + 1] = String.format("%02d:30", h);
-		}
-		LocalTime t = LocalTime.now();
-		int indiceHora = t.getHour() * 2 + 1 + (t.getMinute() > 30 ? 1 : 0);
+        String code = aluguer.getId();
+        String matricula = aluguer.getViatura().getMatricula();
 
-		JPanel painel = new JPanel(new GridLayout(0, 1));
-		JPanel temposPn = new JPanel();
-		painel.setBorder(BorderFactory.createTitledBorder("Escolher data de recolha e entrega"));
-		temposPn.add(new JLabel("De:"));
-		dataInicio = LocalDate.now();
-		if (indiceHora == horas.length) {
-			indiceHora = 0;
-			dataInicio = dataInicio.plusDays(1);
-		}
-		deBt = new JButton(dataInicio.format(dataFormatter));
-		deBt.addActionListener(e -> escolherInicio());
-		temposPn.add(deBt);
-		JComboBox<String> horasIniCb = new JComboBox<>(horas);
-		horasIniCb.addActionListener(e -> {
-			horasInicio = LocalTime.of(horasIniCb.getSelectedIndex() / 2, 30 * (horasIniCb.getSelectedIndex() % 2));
-			limparPesquisa();
-		});
-		horasIniCb.setSelectedIndex(indiceHora);
-		temposPn.add(horasIniCb);
-		temposPn.add(new JLabel("Até:"));
-		dataFim = dataInicio.plusDays(1);
-		ateBt = new JButton(dataFim.format(dataFormatter));
-		ateBt.addActionListener(e -> escolherFim());
-		temposPn.add(ateBt);
-		JComboBox<String> horasFimCb = new JComboBox<>(horas);
-		horasFimCb.addActionListener(e -> {
-			horasFim = LocalTime.of(horasFimCb.getSelectedIndex() / 2, 30 * (horasFimCb.getSelectedIndex() % 2));
-			limparPesquisa();
-		});
-		horasFimCb.setSelectedIndex(indiceHora);
-		temposPn.add(horasFimCb);
+        // apresentar a info
+        JOptionPane.showMessageDialog(this,
+                "<html>Obrigado por usar os nossos serviços!<br>Aluguer " + code + ", carro será " + matricula
+                        + "</html>");
+        limparPesquisa();
+    }
 
-		JPanel catePesquisar = new JPanel();
-		catePesquisar.add(new JLabel("Categoria:"));
-		categCb.addActionListener(e -> limparPesquisa());
-		catePesquisar.add(categCb);
+    /**
+     * Cria e configura a janela
+     *
+     * @param nomes nomes das estações a usar
+     */
+    private void setupJanela(Vector<String> nomes) {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		JButton pesquisarBt = new JButton("Pesquisar");
-		pesquisarBt.addActionListener(e -> pesquisar());
-		catePesquisar.add(pesquisarBt);
+        SpringLayout layout = new SpringLayout();
+        JPanel panel = new JPanel(layout);
 
-		painel.add(temposPn);
-		painel.add(catePesquisar);
-		return painel;
-	}
+        JPanel estacoes = setupEscolhaEstacao(nomes);
+        JPanel tempos = setupEscolhaTempos();
+        JScrollPane scrollAlugueres = new JScrollPane(alugueres);
+        panel.add(estacoes);
+        panel.add(tempos);
+        panel.add(scrollAlugueres);
 
-	/**
-	 * método chamado quando o utilizador escolhe mudar a data de início
-	 */
-	private void escolherInicio() {
-		CalendarDialog cd = new CalendarDialog(dataInicio);
-		cd.setModal(true);
-		cd.setVisible(true);
-		limparPesquisa();
-		if (cd.hasSelectedDate()) {
-			dataInicio = cd.getSelectedDate();
-			deBt.setText(dataInicio.format(dataFormatter));
-		}
-	}
+        layout.putConstraint(NORTH, estacoes, 2, NORTH, panel);
+        layout.putConstraint(EAST, estacoes, 2, EAST, panel);
+        layout.putConstraint(WEST, estacoes, 2, WEST, panel);
 
-	/**
-	 * método chamado quando o utilizador escolhe mudar a data de fim
-	 */
-	private void escolherFim() {
-		CalendarDialog cd = new CalendarDialog(dataFim);
-		cd.setModal(true);
-		cd.setVisible(true);
-		limparPesquisa();
-		if (cd.hasSelectedDate()) {
-			dataFim = cd.getSelectedDate();
-			ateBt.setText(dataFim.format(dataFormatter));
-		}
-	}
+        layout.putConstraint(NORTH, tempos, 2, SOUTH, estacoes);
+        layout.putConstraint(EAST, tempos, 0, EAST, estacoes);
+        layout.putConstraint(WEST, tempos, 0, WEST, estacoes);
+        layout.putConstraint(SOUTH, tempos, 100, NORTH, tempos);
 
-	/**
-	 * Cria a zona de escolha das estações e preenche-a com os respetivos nomes
-	 *
-	 * @param nomes os nomes das estações
-	 * @return o painel configurado
-	 */
-	private JPanel setupEscolhaEstacao(Vector<String> nomes) {
-		JPanel painel = new JPanel(new BorderLayout());
-		painel.setBorder(BorderFactory.createTitledBorder("Escolher Estação"));
+        layout.putConstraint(NORTH, scrollAlugueres, 2, SOUTH, tempos);
+        layout.putConstraint(EAST, scrollAlugueres, 0, EAST, estacoes);
+        layout.putConstraint(WEST, scrollAlugueres, 0, WEST, estacoes);
+        layout.putConstraint(SOUTH, scrollAlugueres, 2, SOUTH, panel);
 
-		JComboBox<String> listagem = new JComboBox<>(nomes);
-		listagem.setEditable(false);
-		listagem.addActionListener(e -> escolherEstacao(listagem.getSelectedIndex()));
-		listagem.setSelectedIndex(0);
-		painel.add(listagem, BorderLayout.CENTER);
+        setContentPane(panel);
+        setSize(450, 680);
+    }
 
-		JButton horarioBt = new JButton("Horário");
-		horarioBt.addActionListener(e -> apresentarHorario());
-		painel.add(horarioBt, BorderLayout.EAST);
+    /**
+     * Cria o painel para escolha dos tempos de início e de fim
+     *
+     * @return o painel configurado
+     */
+    private JPanel setupEscolhaTempos() {
+        String horas[] = new String[48];
+        for (int h = 0; h < 24; h++) {
+            horas[h * 2] = String.format("%02d:00", h);
+            horas[h * 2 + 1] = String.format("%02d:30", h);
+        }
+        LocalTime t = LocalTime.now();
+        int indiceHora = t.getHour() * 2 + 1 + (t.getMinute() > 30 ? 1 : 0);
 
-		return painel;
-	}
+        JPanel painel = new JPanel(new GridLayout(0, 1));
+        JPanel temposPn = new JPanel();
+        painel.setBorder(BorderFactory.createTitledBorder("Escolher data de recolha e entrega"));
+        temposPn.add(new JLabel("De:"));
+        dataInicio = LocalDate.now();
+        if (indiceHora == horas.length) {
+            indiceHora = 0;
+            dataInicio = dataInicio.plusDays(1);
+        }
+        deBt = new JButton(dataInicio.format(dataFormatter));
+        deBt.addActionListener(e -> escolherInicio());
+        temposPn.add(deBt);
+        JComboBox<String> horasIniCb = new JComboBox<>(horas);
+        horasIniCb.addActionListener(e -> {
+            horasInicio = LocalTime.of(horasIniCb.getSelectedIndex() / 2, 30 * (horasIniCb.getSelectedIndex() % 2));
+            limparPesquisa();
+        });
+        horasIniCb.setSelectedIndex(indiceHora);
+        temposPn.add(horasIniCb);
+        temposPn.add(new JLabel("Até:"));
+        dataFim = dataInicio.plusDays(1);
+        ateBt = new JButton(dataFim.format(dataFormatter));
+        ateBt.addActionListener(e -> escolherFim());
+        temposPn.add(ateBt);
+        JComboBox<String> horasFimCb = new JComboBox<>(horas);
+        horasFimCb.addActionListener(e -> {
+            horasFim = LocalTime.of(horasFimCb.getSelectedIndex() / 2, 30 * (horasFimCb.getSelectedIndex() % 2));
+            limparPesquisa();
+        });
+        horasFimCb.setSelectedIndex(indiceHora);
+        temposPn.add(horasFimCb);
 
-	/**
-	 * Método chamado quando o utilizador pressiona o botão de ver o horário da
-	 * estação
-	 *
-	 * @param h o horário da estação
-	 */
-	private void apresentarHorario(HorarioSemanal h) {
-		String nomesDias[] = { "Seg.: ", "Ter.: ", "Qua.: ", "Qui.: ", "Sex.: ", "Sab.: ", "Dom.: " };
-		StringBuilder str = new StringBuilder("<html>");
-		int i = 0;
-		for (DayOfWeek dia : DayOfWeek.values()) {
-			HorarioDiario hd = h.getHorarioDia(dia);
-			if (hd.eVazio())
-				str.append(nomesDias[i++] + "fechado");
-			else {
-				str.append(nomesDias[i++] + h.getHorarioDia(dia).getInicio().format(horaFormatter) + " - ");
-				str.append(h.getHorarioDia(dia).getFim().format(horaFormatter));
-			}
-			str.append("<br>");
-		}
-		str.append("</html>");
-		JOptionPane.showMessageDialog(this, str, "Horário", JOptionPane.INFORMATION_MESSAGE);
-	}
+        JPanel catePesquisar = new JPanel();
+        catePesquisar.add(new JLabel("Categoria:"));
+        categCb.addActionListener(e -> limparPesquisa());
+        catePesquisar.add(categCb);
 
-	/** Limpa o painel de pesquisa */
-	private void limparPesquisa() {
-		alugueres.removeAll();
-	}
+        JButton pesquisarBt = new JButton("Pesquisar");
+        pesquisarBt.addActionListener(e -> pesquisar());
+        catePesquisar.add(pesquisarBt);
 
-	/**
-	 * Classe que representa um painel onde irão ser colcoadas as informações de um
-	 * possível aluguer
-	 */
-	private class PainelAluguer extends JPanel {
+        painel.add(temposPn);
+        painel.add(catePesquisar);
+        return painel;
+    }
 
-		PainelAluguer(String modelo, int lotacao, int bagagem, long preco, Object valor) {
-			SpringLayout layout = new SpringLayout();
-			setLayout(layout);
-			setOpaque(false);
+    /**
+     * método chamado quando o utilizador escolhe mudar a data de início
+     */
+    private void escolherInicio() {
+        CalendarDialog cd = new CalendarDialog(dataInicio);
+        cd.setModal(true);
+        cd.setVisible(true);
+        limparPesquisa();
+        if (cd.hasSelectedDate()) {
+            dataInicio = cd.getSelectedDate();
+            deBt.setText(dataInicio.format(dataFormatter));
+        }
+    }
 
-			JLabel modeloLbl = new JLabel(modelo);
-			modeloLbl.setFont(grandeFont);
-			add(modeloLbl);
+    /**
+     * método chamado quando o utilizador escolhe mudar a data de fim
+     */
+    private void escolherFim() {
+        CalendarDialog cd = new CalendarDialog(dataFim);
+        cd.setModal(true);
+        cd.setVisible(true);
+        limparPesquisa();
+        if (cd.hasSelectedDate()) {
+            dataFim = cd.getSelectedDate();
+            ateBt.setText(dataFim.format(dataFormatter));
+        }
+    }
 
-			JLabel portasLbl = new JLabel("lotação: " + lotacao);
-			portasLbl.setFont(mediaFont);
-			add(portasLbl);
+    /**
+     * Cria a zona de escolha das estações e preenche-a com os respetivos nomes
+     *
+     * @param nomes os nomes das estações
+     * @return o painel configurado
+     */
+    private JPanel setupEscolhaEstacao(Vector<String> nomes) {
+        JPanel painel = new JPanel(new BorderLayout());
+        painel.setBorder(BorderFactory.createTitledBorder("Escolher Estação"));
 
-			JLabel lotacaoLbl = new JLabel("malas: " + bagagem);
-			lotacaoLbl.setFont(mediaFont);
-			add(lotacaoLbl);
+        JComboBox<String> listagem = new JComboBox<>(nomes);
+        listagem.setEditable(false);
+        listagem.addActionListener(e -> escolherEstacao(listagem.getSelectedIndex()));
+        listagem.setSelectedIndex(0);
+        painel.add(listagem, BorderLayout.CENTER);
 
-			JLabel precoLbl = new JLabel(String.format("%.2f€", preco / 100.0f));
-			precoLbl.setFont(grandeFont);
-			add(precoLbl);
+        JButton horarioBt = new JButton("Horário");
+        horarioBt.addActionListener(e -> apresentarHorario());
+        painel.add(horarioBt, BorderLayout.EAST);
 
-			JButton alugarBt = new JButton("Alugar");
-			alugarBt.addActionListener(e -> alugar(valor));
-			add(alugarBt);
+        return painel;
+    }
 
-			Dimension prefDim = new Dimension(200, 60);
-			setPreferredSize(prefDim);
-			setMinimumSize(prefDim);
-			layout.putConstraint(SpringLayout.NORTH, modeloLbl, 2, SpringLayout.NORTH, this);
-			layout.putConstraint(SpringLayout.EAST, modeloLbl, -2, SpringLayout.EAST, this);
-			layout.putConstraint(SpringLayout.WEST, modeloLbl, 2, SpringLayout.WEST, this);
+    /**
+     * Método chamado quando o utilizador pressiona o botão de ver o horário da
+     * estação
+     *
+     * @param h o horário da estação
+     */
+    private void apresentarHorario(HorarioSemanal h) {
+        String nomesDias[] = {"Seg.: ", "Ter.: ", "Qua.: ", "Qui.: ", "Sex.: ", "Sab.: ", "Dom.: "};
+        StringBuilder str = new StringBuilder("<html>");
+        int i = 0;
+        for (DayOfWeek dia : DayOfWeek.values()) {
+            HorarioDiario hd = h.getHorarioDia(dia);
+            if (hd.eVazio())
+                str.append(nomesDias[i++] + "fechado");
+            else {
+                str.append(nomesDias[i++] + h.getHorarioDia(dia).getInicio().format(horaFormatter) + " - ");
+                str.append(h.getHorarioDia(dia).getFim().format(horaFormatter));
+            }
+            str.append("<br>");
+        }
+        str.append("</html>");
+        JOptionPane.showMessageDialog(this, str, "Horário", JOptionPane.INFORMATION_MESSAGE);
+    }
 
-			layout.putConstraint(SpringLayout.NORTH, portasLbl, 2, SpringLayout.SOUTH, modeloLbl);
-			layout.putConstraint(SpringLayout.WEST, portasLbl, 2, SpringLayout.WEST, modeloLbl);
+    /**
+     * Limpa o painel de pesquisa
+     */
+    private void limparPesquisa() {
+        alugueres.removeAll();
+    }
 
-			layout.putConstraint(SpringLayout.NORTH, lotacaoLbl, 0, SpringLayout.NORTH, portasLbl);
-			layout.putConstraint(SpringLayout.WEST, lotacaoLbl, 10, SpringLayout.EAST, portasLbl);
+    /**
+     * Classe que representa um painel onde irão ser colcoadas as informações de um
+     * possível aluguer
+     */
+    private class PainelAluguer extends JPanel {
 
-			layout.putConstraint(SpringLayout.NORTH, precoLbl, 2, SpringLayout.NORTH, this);
-			layout.putConstraint(SpringLayout.EAST, precoLbl, -10, SpringLayout.EAST, this);
+        PainelAluguer(String modelo, int lotacao, int bagagem, long preco, Object valor) {
+            SpringLayout layout = new SpringLayout();
+            setLayout(layout);
+            setOpaque(false);
 
-			layout.putConstraint(SpringLayout.NORTH, alugarBt, 2, SpringLayout.SOUTH, precoLbl);
-			layout.putConstraint(SpringLayout.EAST, alugarBt, -10, SpringLayout.EAST, this);
-		}
+            JLabel modeloLbl = new JLabel(modelo);
+            modeloLbl.setFont(grandeFont);
+            add(modeloLbl);
 
-		@Override
-		protected void paintComponent(Graphics g) {
-			g.setColor(COR_RESULTADO);
-			g.fillRoundRect(0, 1, getWidth(), getHeight() - 2, 16, 16);
-			g.setColor(Color.GRAY);
-			g.drawRoundRect(0, 1, getWidth(), getHeight() - 2, 16, 16);
-			super.paintComponent(g);
-		}
-	}
+            JLabel portasLbl = new JLabel("lotação: " + lotacao);
+            portasLbl.setFont(mediaFont);
+            add(portasLbl);
+
+            JLabel lotacaoLbl = new JLabel("malas: " + bagagem);
+            lotacaoLbl.setFont(mediaFont);
+            add(lotacaoLbl);
+
+            JLabel precoLbl = new JLabel(String.format("%.2f€", preco / 100.0f));
+            precoLbl.setFont(grandeFont);
+            add(precoLbl);
+
+            JButton alugarBt = new JButton("Alugar");
+            alugarBt.addActionListener(e -> alugar(valor));
+            add(alugarBt);
+
+            Dimension prefDim = new Dimension(200, 60);
+            setPreferredSize(prefDim);
+            setMinimumSize(prefDim);
+            layout.putConstraint(SpringLayout.NORTH, modeloLbl, 2, SpringLayout.NORTH, this);
+            layout.putConstraint(SpringLayout.EAST, modeloLbl, -2, SpringLayout.EAST, this);
+            layout.putConstraint(SpringLayout.WEST, modeloLbl, 2, SpringLayout.WEST, this);
+
+            layout.putConstraint(SpringLayout.NORTH, portasLbl, 2, SpringLayout.SOUTH, modeloLbl);
+            layout.putConstraint(SpringLayout.WEST, portasLbl, 2, SpringLayout.WEST, modeloLbl);
+
+            layout.putConstraint(SpringLayout.NORTH, lotacaoLbl, 0, SpringLayout.NORTH, portasLbl);
+            layout.putConstraint(SpringLayout.WEST, lotacaoLbl, 10, SpringLayout.EAST, portasLbl);
+
+            layout.putConstraint(SpringLayout.NORTH, precoLbl, 2, SpringLayout.NORTH, this);
+            layout.putConstraint(SpringLayout.EAST, precoLbl, -10, SpringLayout.EAST, this);
+
+            layout.putConstraint(SpringLayout.NORTH, alugarBt, 2, SpringLayout.SOUTH, precoLbl);
+            layout.putConstraint(SpringLayout.EAST, alugarBt, -10, SpringLayout.EAST, this);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            g.setColor(COR_RESULTADO);
+            g.fillRoundRect(0, 1, getWidth(), getHeight() - 2, 16, 16);
+            g.setColor(Color.GRAY);
+            g.drawRoundRect(0, 1, getWidth(), getHeight() - 2, 16, 16);
+            super.paintComponent(g);
+        }
+    }
 }

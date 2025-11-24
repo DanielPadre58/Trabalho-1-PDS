@@ -14,7 +14,6 @@ public class Viatura {
         this.matricula = Validator.requireNonBlankTrimmed(matricula);
         this.modelo = Objects.requireNonNull(modelo);
         this.estacao = Objects.requireNonNull(estacao);
-        estacao.adicionarViatura(this);
     }
     
     public String getMatricula() {

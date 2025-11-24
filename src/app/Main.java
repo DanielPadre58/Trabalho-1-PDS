@@ -216,8 +216,7 @@ public class Main {
 				ModeloViatura modeloViatura = best.getModelo(modelo);
 				Estacao estacaoViatura = best.getEstacao(estacao);
 				Viatura viatura = new Viatura(matricula, modeloViatura, estacaoViatura);
-				// TODO completar o método
-
+				estacaoViatura.adicionarViatura(viatura);
 			}
 		} catch (IOException e) {
 			System.out.println("Erro na leitura do ficheiro " + file);
