@@ -5,6 +5,7 @@ import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
+import pds.tempo.IntervaloTempo;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +32,8 @@ public interface Estacao {
     void adicionarViatura(Viatura viatura);
 
     List<Viatura> getViaturas();
+    
+    List<Viatura> getViaturasDisponiveis(IntervaloTempo intervalo);
     
     List<Categoria> getCategorias();
     

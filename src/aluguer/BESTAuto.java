@@ -4,12 +4,16 @@ import aluguer.estacao.Estacao;
 import aluguer.viatura.Categoria;
 import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
+import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.IntervaloTempo;
 import pds.util.GeradorCodigos;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Classe que representa o sistema
@@ -55,44 +59,81 @@ public class BESTAuto {
         modelos.add(modelo);
     }
 
-    public void adicionarAluguer(Aluguer aluguer) {
+    public void adicionarAluguer(Aluguer aluguer, boolean daCentral) {
         alugueres.add(aluguer);
+        Estacao estacao = aluguer.getEstacao();
+        ViaturaIndisponivel viaturaIndisponivel = new ViaturaIndisponivel(aluguer);
+
+        if (!daCentral) {
+            estacao.adicionarViaturaIndisponivel(viaturaIndisponivel);
+            return;
+        }
+        
+        Estacao central = estacao.getCentral();
+        IntervaloTempo periodoRecolha = new IntervaloTempo(
+                LocalDateTime.of(aluguer.getPeriodoAluguer().getInicio().minusDays(1).toLocalDate(), LocalTime.of(17, 0)),
+                aluguer.getPeriodoAluguer().getInicio());
+        ViaturaIndisponivel indisponibilidadeRecolha = new ViaturaIndisponivel(
+                aluguer.getViatura(),
+                periodoRecolha,
+                "Movendo a viatura de " + central.getNome() + " para " + estacao.getNome()
+        );
+
+        IntervaloTempo periodoEntrega = new IntervaloTempo(
+                aluguer.getPeriodoAluguer().getFim(),
+                LocalDateTime.of(aluguer.getPeriodoAluguer().getFim().plusDays(1).toLocalDate(), LocalTime.of(9, 30))
+        );
+        ViaturaIndisponivel indisponibilidadeEntrega = new ViaturaIndisponivel(
+                aluguer.getViatura(),
+                periodoEntrega,
+                "Movendo a viatura de " + estacao.getNome() + " para " + central.getNome()
+        );
+
+        central.adicionarViaturaIndisponivel(viaturaIndisponivel);
+        central.adicionarViaturaIndisponivel(indisponibilidadeRecolha);
+        central.adicionarViaturaIndisponivel(indisponibilidadeEntrega);
     }
 
-    public List<Viatura> pesquisarViaturas(Categoria categoria, String estacao) {
+    public List<Viatura> pesquisarViaturas(Categoria categoria, String estacao, IntervaloTempo intervalo) {
         return new ArrayList<Viatura>(
                 getEstacao(estacao)
-                .getViaturas()
-                .stream()
-                .filter(v -> v.getModelo().getCategoria().equals(categoria))
-                .toList()
+                        .getViaturasDisponiveis(intervalo)
+                        .stream()
+                        .filter(v -> v.getModelo().getCategoria().equals(categoria))
+                        .toList()
         );
     }
+    
+    public List<ViaturaIndisponivel> pesquisarIndisponibilidades(Estacao estacao, String matricula) {
+        return estacao.getViaturasIndisponiveis().stream()
+                .filter(v -> v.getViatura().getMatricula().equals(matricula))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
 
-    public long calcularCustoTotal(String estacao, String modelo,  IntervaloTempo intervalo, boolean daCentral) {
+    public long calcularCustoTotal(String estacao, String modelo, IntervaloTempo intervalo, boolean daCentral) {
         long precoDiario = getModelo(modelo).getPreco();
-        int dias = (int)Math.ceil(intervalo.duracao().toHours() / 24.0);
+        int dias = (int) Math.ceil(intervalo.duracao().toHours() / 24.0);
         if (daCentral)
             dias += 2;
         long custoTotal = precoDiario * dias;
-        
+
         Estacao est = getEstacao(estacao);
         if (est.estaAbertaEmExtensao(intervalo.getInicio())) {
             custoTotal += est.getCustoExtensao(precoDiario);
         }
-        
+
         if (est.estaAbertaEmExtensao(intervalo.getFim())) {
             custoTotal += est.getCustoExtensao(precoDiario);
         }
 
         return custoTotal;
     }
-    
+
     public String gerarCodigoAluguer() {
         String codigo = GeradorCodigos.gerarCodigo(8);
-        if(alugueres.stream().anyMatch(a -> a.getId().equals(codigo)))
+        if (alugueres.stream().anyMatch(a -> a.getId().equals(codigo)))
             return gerarCodigoAluguer();
-        
+
         return codigo;
     }
 }

@@ -33,6 +33,10 @@ public class ModeloViatura {
         return categoria;
     }
     
+    public String getMarca() {
+        return marca;
+    }
+    
     public int getLotacao() {
         return lotacao;
     }

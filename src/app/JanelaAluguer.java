@@ -143,14 +143,14 @@ public class JanelaAluguer extends JFrame {
 		if(!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim))
 			return;
 		
-		List<Viatura> resultados = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId());
+		List<Viatura> resultados = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId(), intervaloSel);
 		List<ModeloViatura> modeloEncontrados = resultados.stream()
 				.map(Viatura::getModelo)
 				.distinct()
 				.toList();
 		
 		if(estacaoAtual.getCentral() != null) {
-			List<Viatura> viaturasCentral = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId());
+			List<Viatura> viaturasCentral = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId(), intervaloSel);
 			for(Viatura viatura : viaturasCentral) {
 				if(!modeloEncontrados.contains(viatura.getModelo())) {
 					resultados.add(viatura);
@@ -159,14 +159,16 @@ public class JanelaAluguer extends JFrame {
 		}
 		
 		for(Viatura viatura : resultados) {
+			boolean daCentral = viatura.getEstacao() != estacaoAtual;
 			ResultadoPesquisa resultadoPesquisa = new ResultadoPesquisa(
 					viatura, 
 					bestAuto.calcularCustoTotal(
 						estacaoAtual.getId(),
 						viatura.getModelo().getId(),
 						intervaloSel,
-						viatura.getEstacao() != estacaoAtual),
-					intervaloSel
+						daCentral),
+					intervaloSel,
+					daCentral
 			);
 			
 			PainelAluguer painelAluguer = new PainelAluguer(
@@ -197,10 +199,10 @@ public class JanelaAluguer extends JFrame {
 				resultadoPesquisa.getViatura(), 
 				estacaoAtual, 
 				resultadoPesquisa.getCustoTotal(), 
-				resultadoPesquisa.getIntervalo().getInicio()
+				resultadoPesquisa.getIntervalo()
 		);
-
-		// TODO colocar a info certa nas variáveis
+		bestAuto.adicionarAluguer(aluguer, resultadoPesquisa.eDaCentral());
+		
 		String code = aluguer.getId();
 		String matricula = aluguer.getViatura().getMatricula();
 

@@ -5,6 +5,7 @@ import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
 import pds.tempo.HorarioSemanal;
+import pds.tempo.IntervaloTempo;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -80,6 +81,21 @@ public class EstacaoGrande implements Estacao {
     @Override
     public List<Viatura> getViaturas() {
         return Collections.unmodifiableList(viaturas);
+    }
+
+    @Override
+    public List<Viatura> getViaturasDisponiveis(IntervaloTempo periodo) {
+        List<Viatura> disponiveis = new ArrayList<>();
+        for(Viatura viatura : viaturas) {
+            if(viaturasIndisponiveis
+                    .stream()
+                    .noneMatch(viaturaIndisponivel -> viaturaIndisponivel.getViatura().equals(viatura) &&
+                            viaturaIndisponivel.estaIndisponivel(periodo))) {
+                disponiveis.add(viatura);
+            }
+        }
+        
+        return Collections.unmodifiableList(disponiveis);
     }
 
     @Override
