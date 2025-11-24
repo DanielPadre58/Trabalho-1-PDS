@@ -30,6 +30,7 @@ import aluguer.estacao.Estacao;
 import aluguer.viatura.Categoria;
 import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
+import aluguer.viatura.ViaturaIndisponivel;
 
 @SuppressWarnings("serial")
 /**
@@ -137,12 +138,14 @@ public class JanelaEstacoes extends JFrame {
 
 		// TODO para cada indiponibilidade da viatura com a matricula selecionada chamar
 		// o método adicionarLinha para adicionar uma linha à tabela de
-		// indisponibilidades (o que está são apenas exemplos)
-		adicionarLinha(LocalDateTime.now().plusDays(1).withHour(17).withMinute(0), LocalDateTime.now().plusDays(2),
-				"Deslocar para ALC");
-		adicionarLinha(LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(4), "Aluguer XX1234XX");
-		adicionarLinha(LocalDateTime.now().plusDays(4), LocalDateTime.now().plusDays(5).withHour(9).withMinute(30),
-				"Retornar a CTB");
+		List<ViaturaIndisponivel> indisponibilidades = bestAuto.pesquisarIndisponibilidades(estacaoAtual, matricula);
+ 		// indisponibilidades (o que está são apenas exemplos)
+		for (ViaturaIndisponivel indisponibilidade : indisponibilidades) {
+			adicionarLinha(
+					indisponibilidade.getPeriodoIndisponibilidade().getInicio(),
+					indisponibilidade.getPeriodoIndisponibilidade().getFim(),
+					indisponibilidade.getMotivo());
+		}
 	}
 
 	/**
