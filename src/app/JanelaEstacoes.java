@@ -135,9 +135,7 @@ public class JanelaEstacoes extends JFrame {
 	 */
 	private void escolherAutomovel(String matricula) {
 		indisponibilidadesModel.setRowCount(0); // limpar a tabela
-
-		// TODO para cada indiponibilidade da viatura com a matricula selecionada chamar
-		// o método adicionarLinha para adicionar uma linha à tabela de
+		
 		List<ViaturaIndisponivel> indisponibilidades = bestAuto.pesquisarIndisponibilidades(estacaoAtual, matricula);
  		// indisponibilidades (o que está são apenas exemplos)
 		for (ViaturaIndisponivel indisponibilidade : indisponibilidades) {
