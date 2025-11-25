@@ -55,7 +55,7 @@ public class JanelaEstacoes extends JFrame {
 		bestAuto = a;
 		setTitle("bEST Auto - A melhor experiência em aluguer de automóveis");
 		
-		// vetor nomes (o que está é apenas de exemplo)
+		// vetor nomes
 		Vector<String> nomes = new Vector<>();
 		a.getEstacoes().forEach(e -> nomes.add(e.getNome()));
 		setupJanela(nomes);
@@ -67,9 +67,8 @@ public class JanelaEstacoes extends JFrame {
 	 * @param selecionadaIndex o índice da estação selecionada
 	 */
 	private void escolherEstacao(int selecionadaIndex) {
-		// TODO escolher a estação e colocar na lista as categorias suportas por esta
 		estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
-		// estação (neste momento está a colocar todas)
+		// estação
 		Collection<Categoria> lista = estacaoAtual.getCategorias();
 
 		// limpar as restantes listas todas
@@ -89,8 +88,6 @@ public class JanelaEstacoes extends JFrame {
 	 * @param c a categoria escolhida
 	 */
 	private void escolherCategoria(Categoria c) {
-		// TODO colocar na lista o nome dos modelos que a estação selecionada tem nesta
-		// categoria (Neste momento é apenas um exemplo)
 		List<String> modelos = estacaoAtual.getModelos()
 				.stream()
 				.filter(modelo -> modelo.getCategoria().equals(c))
@@ -112,8 +109,6 @@ public class JanelaEstacoes extends JFrame {
 	 * @param modelo nome do modelo selecionado
 	 */
 	private void escolherModelo(String modelo) {
-		// TODO colocar na lista todas as matrículas das viaturas do modelo selecionado,
-		// o que está é apenas um exemplo
 		List<String> matriculas = estacaoAtual.getViaturas()
 				.stream()
 				.filter(viatura -> viatura.getModelo().getModelo().equals(modelo))
@@ -137,7 +132,7 @@ public class JanelaEstacoes extends JFrame {
 		indisponibilidadesModel.setRowCount(0); // limpar a tabela
 		
 		List<ViaturaIndisponivel> indisponibilidades = bestAuto.pesquisarIndisponibilidades(estacaoAtual, matricula);
- 		// indisponibilidades (o que está são apenas exemplos)
+ 		// indisponibilidades
 		for (ViaturaIndisponivel indisponibilidade : indisponibilidades) {
 			adicionarLinha(
 					indisponibilidade.getPeriodoIndisponibilidade().getInicio(),

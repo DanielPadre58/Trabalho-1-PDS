@@ -5,14 +5,13 @@ import aluguer.viatura.Categoria;
 import aluguer.viatura.ModeloViatura;
 import aluguer.viatura.Viatura;
 import aluguer.viatura.ViaturaIndisponivel;
+import app.ResultadoPesquisa;
 import pds.tempo.IntervaloTempo;
 import pds.util.GeradorCodigos;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -35,9 +34,9 @@ public class BESTAuto {
 
     public Estacao getEstacao(String id) {
         return estacoes.stream()
-                .filter(e -> e.getId().equals(id))
+                .filter(estacao -> estacao.getId().equals(id))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("Estação não encontrada: " + id));
     }
 
     public List<Estacao> getEstacoes() {
@@ -48,7 +47,7 @@ public class BESTAuto {
         return modelos.stream()
                 .filter(m -> m.getId().equals(id))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("Modelo não encontrado: " + id));
     }
 
     public List<ModeloViatura> getModelos() {
@@ -68,7 +67,7 @@ public class BESTAuto {
             estacao.adicionarViaturaIndisponivel(viaturaIndisponivel);
             return;
         }
-        
+
         Estacao central = estacao.getCentral();
         IntervaloTempo periodoRecolha = new IntervaloTempo(
                 LocalDateTime.of(aluguer.getPeriodoAluguer().getInicio().minusDays(1).toLocalDate(), LocalTime.of(17, 0)),
@@ -94,64 +93,64 @@ public class BESTAuto {
         central.adicionarViaturaIndisponivel(indisponibilidadeEntrega);
     }
 
-    public List<Viatura> pesquisarViaturas(Categoria categoria, String estacao, IntervaloTempo intervalo) {
-        return new ArrayList<Viatura>(
-                getEstacao(estacao)
-                        .getViaturasDisponiveis(intervalo)
-                        .stream()
-                        .filter(v -> v.getModelo().getCategoria().equals(categoria))
-                        .toList()
-        );
+    public List<ResultadoPesquisa> pesquisarViaturasComCentral(Categoria categoria, String estacao, IntervaloTempo intervalo) {
+        Estacao est = getEstacao(estacao);
+        
+        Set<String> modelosEncontrados = new HashSet<>();
+        List<Viatura> resultados = est.getViaturasDisponiveis(intervalo)
+                .stream()
+                .filter(viatura -> viatura.getModelo().getCategoria().equals(categoria))
+                .filter(viatura -> !modelosEncontrados.contains(viatura.getModelo().getId()))
+                .peek(viatura -> modelosEncontrados.add(viatura.getModelo().getId()))
+                .collect(Collectors.toList());
+        
+
+        if (est.getCentral() != null) 
+            est.getCentral().getViaturasDisponiveis(intervalo)
+                    .stream()
+                    .filter(viatura -> viatura.getModelo().getCategoria().equals(categoria))
+                    .filter(viatura -> !modelosEncontrados.contains(viatura.getModelo().getId()))
+                    .forEach(resultados::add);
+
+        return resultados
+                .stream()
+                .map(viatura -> {
+                    boolean eDaCentral = eDaCentral(est.getId(), viatura.getMatricula());
+                    long custoTotal = CalculadoraPrecos.calcularCustoTotal(est, viatura.getModelo(), intervalo, eDaCentral);
+                    return new ResultadoPesquisa(
+                            viatura,
+                            custoTotal,
+                            intervalo, 
+                            eDaCentral
+                    );
+                })
+                .toList();
     }
-    
+
     public List<ViaturaIndisponivel> pesquisarIndisponibilidades(Estacao estacao, String matricula) {
         return estacao.getViaturasIndisponiveis().stream()
-                .filter(v -> v.getViatura().getMatricula().equals(matricula))
+                .filter(viatura -> viatura.getViatura().getMatricula().equals(matricula))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
-    
-    private long calcularCustoDiario(ModeloViatura modelo, IntervaloTempo intervalo) {
-        int dias = (int) Math.ceil(intervalo.duracao().toHours() / 24.0);
-        return modelo.getPreco() * dias;
-    }
-    
-    private long calcularTaxaCentral(ModeloViatura modelo) {
-        return modelo.getPreco() * 2;
-    }
-    
-    private long calcularCustoExtensao(Estacao estacao, ModeloViatura modelo, IntervaloTempo intervalo) {
-        long custoExtensao = 0;
-        if (estacao.estaAbertaEmExtensao(intervalo.getInicio())) {
-            custoExtensao += estacao.getCustoExtensao(modelo.getPreco());
-        }
 
-        if (estacao.estaAbertaEmExtensao(intervalo.getFim())) {
-            custoExtensao += estacao.getCustoExtensao(modelo.getPreco());
-        }
-        
-        return custoExtensao;
-    }
-
-    public long calcularCustoTotal(String estacao, String modelo, IntervaloTempo intervalo, boolean daCentral) {
-        Estacao est = getEstacao(estacao);
-        ModeloViatura mod = getModelo(modelo);
-        
-        return daCentral ? calcularTaxaCentral(mod) + calcularCustoExtensao(est, mod, intervalo) + calcularCustoDiario(mod, intervalo) : 
-                calcularCustoDiario(mod, intervalo)  + calcularCustoExtensao(est, mod, intervalo);
-    }
+ 
 
     public String gerarCodigoAluguer() {
         String codigo = GeradorCodigos.gerarCodigo(8);
-        if (alugueres.stream().anyMatch(a -> a.getId().equals(codigo)))
+        if (alugueres.stream().anyMatch(aluguer -> aluguer.getId().equals(codigo)))
             return gerarCodigoAluguer();
 
         return codigo;
     }
-    
+
     public boolean eDaCentral(String estacao, String matricula) {
         Estacao est = getEstacao(estacao);
+
+        if (est.getCentral() == null)
+            return false;
+
         return est.getCentral().getViaturas()
                 .stream()
-                .anyMatch(v -> v.getMatricula().equals(matricula));
+                .anyMatch(viatura -> viatura.getMatricula().equals(matricula));
     }
 }

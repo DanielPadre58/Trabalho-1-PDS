@@ -101,7 +101,6 @@ public class JanelaAluguer extends JFrame {
      * @param selecionadaIndex o índice da estação selecionada
      */
     private void escolherEstacao(int selecionadaIndex) {
-        // TODO selecionar a estação adequada
         estacaoAtual = bestAuto.getEstacoes().get(selecionadaIndex);
 
         // limpar a pesquisa
@@ -130,45 +129,28 @@ public class JanelaAluguer extends JFrame {
         LocalDateTime fim = LocalDateTime.of(dataFim, horasFim);
         intervaloSel = IntervaloTempo.entre(inicio, fim);
         // garantir que fim é, pelo menos, um dia depois do início
-        if (intervaloSel.duracao().toHours() < 24) {
+        if (fim.isBefore(inicio.plusDays(1))) {
             JOptionPane.showMessageDialog(null,
                     "A data de fim tem de ser superior em 1 dia, pelo menos, à data de início");
             return;
         }
         Categoria categoria = (Categoria) categCb.getSelectedItem();
 
-        if (!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim)) {
-            alugueres.add(new JLabel("-- A ESTAÇÃO DEVE ESTAR ABERTA EM PELO MENOS UMA DAS HORAS --", JLabel.CENTER));
+        if (!estacaoAtual.estaAbertaComExtensao(inicio) && !estacaoAtual.estaAbertaComExtensao(fim)) {
+            JOptionPane.showMessageDialog(null,
+                    "A estação deve estar aberta em pelo menos um dos horários selecionados");
+            return;
+        }
+        
+        if(!estacaoAtual.estaAbertaComExtensao(inicio) || !estacaoAtual.estaAbertaComExtensao(fim)) {
+            JOptionPane.showMessageDialog(null,
+                    "A estação não oferece extensão para estes horários");
+            return;
         }
 
-        List<Viatura> resultadosLocais = bestAuto.pesquisarViaturas(categoria, estacaoAtual.getId(), intervaloSel);
-        Set<ModeloViatura> modelosEncontrados = resultadosLocais
-                .stream()
-                .map(Viatura::getModelo)
-                .collect(Collectors.toSet());
-
-        if (estacaoAtual.getCentral() != null)
-            bestAuto.pesquisarViaturas(categoria, estacaoAtual.getCentral().getId(), intervaloSel)
-                    .stream()
-                    .filter(viatura -> !modelosEncontrados.contains(viatura.getModelo()))
-                    .forEach(viatura -> {
-                        resultadosLocais.add(viatura);
-                        modelosEncontrados.add(viatura.getModelo());
-                    });
-
-        resultadosLocais
-                .stream()
-                .map(viatura -> {
-                    boolean daCentral = bestAuto.eDaCentral(estacaoAtual.getId(), viatura.getMatricula());
-                    long custoTotal = bestAuto.calcularCustoTotal(
-                            estacaoAtual.getId(),
-                            viatura.getModelo().getId(),
-                            intervaloSel,
-                            daCentral
-                    );
-
-                    return new ResultadoPesquisa(viatura, custoTotal, intervaloSel, daCentral);
-                })
+        List<ResultadoPesquisa> resultados = bestAuto.pesquisarViaturasComCentral(categoria, estacaoAtual.getId(), intervaloSel);
+        
+        resultados
                 .forEach(resultado -> {
                     PainelAluguer painelAluguer = new PainelAluguer(
                             resultado.getViatura().getModelo().getModelo(),
@@ -180,7 +162,7 @@ public class JanelaAluguer extends JFrame {
                     alugueres.add(painelAluguer);
                 });
 
-        if (resultadosLocais.isEmpty())
+        if (resultados.isEmpty())
             alugueres.add(new JLabel("-- SEM RESULTADOS --", JLabel.CENTER));
     }
 
